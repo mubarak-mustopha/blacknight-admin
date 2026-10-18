@@ -2,12 +2,12 @@ import os
 import pytest
 
 from decimal import Decimal
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqladmin import Admin
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker, Session
+from testcontainers.community.postgres import PostgresContainer
 
 from app.admin import OrderAdmin, OrderItemAdmin
 from db import (
@@ -23,14 +23,16 @@ from db import (
 
 from .baseline import create_baseline
 
-load_dotenv()
-DATABASE_URL = os.environ["TEST_DATABASE_URL"]
 UPDATE_ENPOINT = "/admin/order/edit/{pk}"
 
+@pytest.fixture(scope="session")
+def postgres_container():
+    with PostgresContainer("postgres:16-alpine") as postgres:
+        yield postgres
 
 @pytest.fixture(scope="session")
-def engine():
-    engine = create_engine(DATABASE_URL)
+def engine(postgres_container):
+    engine = create_engine(postgres_container.get_connection_url())
     yield engine
     engine.dispose()
 
