@@ -10,7 +10,7 @@ import db
 
 def report_return_rate(session: Session):
     return_rate = func.sum(OrderItem.quantity_returned) / func.sum(OrderItem.count)
-    stmt = select(func.round(return_rate, 2) * 100)
+    stmt = select(func.coalesce(return_rate * 100, 0.00))
 
     return session.scalar(stmt)
 
@@ -34,5 +34,5 @@ def get_report_context(request: Request):
             **dict(order_status_report),
             **dict(order_payment_report),
         }
-
+        
         return context
