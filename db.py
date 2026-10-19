@@ -23,11 +23,11 @@ from sqlalchemy.orm import (
 )
 
 load_dotenv()
-engine = create_engine(os.environ["DATABASE_URL"], echo=True)
+get_engine = lambda: create_engine(os.environ["DATABASE_URL"], echo=True)
 
 
 def get_session_factory():
-    return sessionmaker(engine, expire_on_commit=False)
+    return sessionmaker(get_engine(), expire_on_commit=False)
 
 
 class Base(DeclarativeBase):

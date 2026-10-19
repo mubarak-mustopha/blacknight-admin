@@ -43,7 +43,7 @@ app.add_middleware(
 auth_backend = AdminAuth(os.environ["SECRET_KEY"])
 admin = CustomAdmin(
     app,
-    db.engine,
+    db.get_engine(),
     authentication_backend=auth_backend,
     session_maker=db.get_session_factory(),
     title="Blacknight Admin",
