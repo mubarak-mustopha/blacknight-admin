@@ -389,3 +389,45 @@ def test_pending_to_delivered_fails_on_low_stock_count(
         assert response.status_code == 400
         assert order.status == OrderStatus.Pending
         assert initial_stock_counts == final_stock_counts
+
+def test_pending_to_delivered_sets_delivered_at(
+    session_factory, client, get_an_order_by_status      
+):
+    with session_factory() as session:
+        stmt = get_an_order_by_status(OrderStatus.Pending)
+        order = session.execute(stmt).scalar_one_or_none()
+        assert order is not None
+        assert order.delivered_at is None
+
+        endpoint = UPDATE_ENPOINT.format(pk=order.id)
+        form_data = {
+            "status": OrderStatus.Delivered.name,
+            "payment_status": order.payment_status.name
+        }
+        response = client.post(endpoint, data=form_data)
+        assert response.status_code == 200
+
+        session.refresh(order)
+
+        assert order.delivered_at is not None
+
+def test_shipped_to_delivered_sets_delivered_at(
+    session_factory, client, get_an_order_by_status      
+):
+    with session_factory() as session:
+        stmt = get_an_order_by_status(OrderStatus.Shipped)
+        order = session.execute(stmt).scalar_one_or_none()
+        assert order is not None
+        assert order.delivered_at is None
+
+        endpoint = UPDATE_ENPOINT.format(pk=order.id)
+        form_data = {
+            "status": OrderStatus.Delivered.name,
+            "payment_status": order.payment_status.name
+        }
+        response = client.post(endpoint, data=form_data)
+        assert response.status_code == 200
+
+        session.refresh(order)
+
+        assert order.delivered_at is not None

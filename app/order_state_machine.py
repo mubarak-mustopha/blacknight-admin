@@ -7,17 +7,19 @@ from .queries import (
     set_delivered_at,
 )
 
-Actions = namedtuple("Actions", ["check", "action"])
+Actions = namedtuple("Actions", ["check", "actions"])
 
 ORDER_STATE_MACHINE = {
     "Pending": {
-        "Cancelled": Actions(None, None),
-        "Shipped": Actions(check_stock_count, decrement_products_in_order),
-        "Delivered": Actions(check_stock_count, decrement_products_in_order),
+        "Cancelled": Actions(None, []),
+        "Shipped": Actions(check_stock_count, [decrement_products_in_order]),
+        "Delivered": Actions(
+            check_stock_count, [decrement_products_in_order, set_delivered_at]
+        ),
     },
     "Shipped": {
-        "Cancelled": Actions(None, increment_products_in_order),
-        "Delivered": Actions(None, set_delivered_at),
+        "Cancelled": Actions(None, [increment_products_in_order]),
+        "Delivered": Actions(None, [set_delivered_at]),
     },
     "Delivered": {},
     "Cancelled": {},
@@ -32,6 +34,6 @@ def do_check(from_status, to_status, param):
 
 
 def do_action(from_status, to_status, param):
-    action = ORDER_STATE_MACHINE[from_status][to_status].action
-    if action is not None:
+    actions = ORDER_STATE_MACHINE[from_status][to_status].actions
+    for action in actions:
         action(param)
